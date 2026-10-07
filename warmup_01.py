@@ -1,4 +1,4 @@
-from dataclasses import dataclass, FrozenInstanceError
+from dataclasses import dataclass, FrozenInstanceError, field
 
 import pytest
 from pydantic import BaseModel, Field, ValidationError, model_validator
@@ -18,10 +18,12 @@ class Thermometer:
         average = sum(self.readings) / len(self.readings)
         return average
     def hottest(self):
+        if len(self.readings) == 0:
+            return None
         return max(self.readings)
     #add __repr__ to return object attributes so it does not print the memory location of the thermometer object
     def __repr__(self):
-        return f"Thermometer(location={self.location}, n_readings={self.readings}, average={self.average()}"
+        return f"Thermometer(location={self.location}, n_readings={self.readings}, average={self.average()})"
 
 class TemperatureAlert:
     def __init__(self, threshold = 30.0):
@@ -53,12 +55,16 @@ class Station:
 
 
 my_test = Thermometer('durham', [10,20,30,40])
+print(my_test)
+my_test_2 =Thermometer('raleigh', [14,19,28,43])
+thermometer_list = [my_test, my_test_2]
+print(thermometer_list)
 my_test.add(45)
 breach_test_one = TemperatureAlert(15)
 breach_test_two = TemperatureAlert() #default 30
 print(breach_test_one.breaches(my_test.readings))
 print(breach_test_two.breaches(my_test.readings))
-print(my_test)
+# it's in temp alert so the threshold can be changed without affecting breaches()
 
 station_a = Station(123, 'test', 40.2, 30.5, 20.4)
 station_b = Station(123, 'test', 40.2, 30.5, 20.4)
@@ -77,9 +83,9 @@ print(len(station_set))
 @dataclass
 class StationBatch:
     region: str
-    stations: list[Station]
+    stations: list[Station] = field(default_factory=list)
     def add(self, station: Station) -> None:
-        self.stations.add(station)
+        self.stations.append(station)
     def highest(self) -> Station | None:
         return max(self.stations, key=lambda s: s.elevation)
 test_batch = StationBatch('rest', station_set)
@@ -110,6 +116,7 @@ try:
     #valid
    new_reading_1 = Reading (station_id="123", timestamp="10/5/2026", temperature_c=14.8,
                  humidity=50.0)
+   print(new_reading_1)
 except ValidationError as e:
     print("\n", e)
 try:
@@ -172,7 +179,7 @@ def test_mean_of_empty_raises():
     "values, expected",
     [
         ([5.0], 5.0),
-        ([1.0, 2.0, 3.0], 2.0),
+        ([1.0, 3.0, 3.0], 2.0),
         ([1.0, 2.0], 1.5),
         ([-1.0, -2.0, -3.0], -2.0),
         ([-5.0, 5.0], 0.0),
