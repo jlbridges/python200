@@ -106,13 +106,10 @@ plt.ylabel("Actual daily high (°C)")
 plt.savefig("outputs/predicted_vs_actual_high.png", dpi=150, bbox_inches="tight")
 plt.show()
 
-# Summary: The dataset has 365 days of Charlotte weather, split into 292
-# training days and 73 test days. Test R² of 0.8805 means the model explains
-# about 88% of the variation in daily highs. Test RMSE of 2.5955 means
-# predictions are typically off by about 2.6°C.
-# Largest effect: [feature name] has the largest coefficient ([value]).
-# Holding the other features fixed, each 1-unit increase in it [raises /
-# lowers] the predicted high by about [abs value]°C.
-# Surprise: [one result that surprised you, about one of the four real
-# features, e.g. how small or large its effect was compared with what you
-# expected].
+# Largest effect: is_summer has the largest coefficient (about 1.34). Holding
+# the other features fixed, a summer day (June, July, August) is predicted to
+# have a high about 1.3°C warmer than a non-summer day.
+# Surprise: I expected is_summer to have a much bigger effect, since summer
+# days are so much hotter than winter days. Its effect is only about 1.3°C
+# because temperature_2m_min (about 0.89 per °C) already captures most of the
+# seasonal warmth.
