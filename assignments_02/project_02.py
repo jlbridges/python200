@@ -106,10 +106,31 @@ plt.ylabel("Actual daily high (°C)")
 plt.savefig("outputs/predicted_vs_actual_high.png", dpi=150, bbox_inches="tight")
 plt.show()
 
-# Largest effect: is_summer has the largest coefficient (about 1.34). Holding
-# the other features fixed, a summer day (June, July, August) is predicted to
-# have a high about 1.3°C warmer than a non-summer day.
+# ---------------- Task 6: Summary ----------------
+# Dataset size: the data has 365 days of Charlotte, North Carolina weather
+# from 2023. The 80/20 split puts 292 days in the training set and 73 days
+# in the test set.
+#
+# Model fit: the full model uses four features (temperature_2m_min,
+# precipitation_sum, wind_speed_10m_max, and is_summer). Its test R² is
+# 0.8805, so it explains about 88% of the variation in daily highs. Its test
+# RMSE is 2.5955, which means its predictions are typically off by about
+# 2.6°C.
+#
+# Where the model struggles: [high end / low end / roughly even across the
+# range]. [One sentence on what you see in the plot, e.g. "the points stay
+# about the same distance from the diagonal from cold days to hot days."]
+#
+# Largest effect: is_summer has the largest coefficient (about 1.34).
+# Holding the other features fixed, a summer day (June, July, or August) is
+# predicted to have a high about 1.3°C warmer than a non-summer day.
+# temperature_2m_min is smaller per degree (about 0.89), but it varies over
+# a much wider range, so over the whole year it moves the predicted high
+# more than the summer flag does. precipitation_sum (about -0.20) lowers the
+# predicted high by about 0.2°C per mm of rain, and wind_speed_10m_max
+# (about -0.04) has almost no effect.
+#
 # Surprise: I expected is_summer to have a much bigger effect, since summer
 # days are so much hotter than winter days. Its effect is only about 1.3°C
-# because temperature_2m_min (about 0.89 per °C) already captures most of the
-# seasonal warmth.
+# because temperature_2m_min (about 0.89 per °C) already captures most of
+# the seasonal warmth.
