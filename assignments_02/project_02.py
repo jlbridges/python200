@@ -106,7 +106,13 @@ plt.ylabel("Actual daily high (°C)")
 plt.savefig("outputs/predicted_vs_actual_high.png", dpi=150, bbox_inches="tight")
 plt.show()
 
-# the size of the data set is 300 the sample size is 30. the is_rainy feature had the most impact to the left
-#R^2 0.8805
-#RMSE 2.5955
-#the result that suppressed me is how much is_rainy affected data
+# Summary: The dataset has 365 days of Charlotte weather, split into 292
+# training days and 73 test days. Test R² of 0.8805 means the model explains
+# about 88% of the variation in daily highs. Test RMSE of 2.5955 means
+# predictions are typically off by about 2.6°C.
+# Largest effect: [feature name] has the largest coefficient ([value]).
+# Holding the other features fixed, each 1-unit increase in it [raises /
+# lowers] the predicted high by about [abs value]°C.
+# Surprise: [one result that surprised you, about one of the four real
+# features, e.g. how small or large its effect was compared with what you
+# expected].
