@@ -42,6 +42,11 @@ plt.ylabel("High temperature (temp_max)")
 plt.savefig("outputs/high_vs_low.png", dpi=150, bbox_inches="tight")
 plt.show()
 
+# The points form a strong upward linear trend, and they split into two
+# visible groups by color: rainy days (red) sit consistently below dry days
+# (blue) at the same low temperature. This suggests is_rainy shifts the daily
+# high down, so it should help the model.
+
 X = temp_min.reshape(-1, 1)
 y = temp_max
 
@@ -69,7 +74,8 @@ r2 = model.score(X_test, y_test)
 print(f"RMSE: {rmse:.4f}")
 print(f"R² (test): {r2:.4f}")
 
-
+# Slope (~0.94): for every 1°C increase in the overnight low, the model
+# predicts the daily high will be about 0.94°C warmer.
 
 X_full = np.column_stack([temp_min, is_rainy])
 
@@ -89,7 +95,8 @@ print(f"Coefficient is_rainy:   {model_full.coef_[1]:.4f}")
 
 print("temp_min coefficient:", model_full.coef_[0])
 print("is_rainy coefficient:", model_full.coef_[1])
-
+# is_rainy coefficient (~-2.92): holding the low temperature fixed, a rainy
+# day is predicted to have a daily high about 2.9°C cooler than a dry day.
 yf_pred = model_full.predict(Xf_test)
 
 lims = [min(yf_pred.min(), yf_test.min()), max(yf_pred.max(), yf_test.max())]
@@ -103,3 +110,8 @@ plt.ylabel("Actual high temperature")
 plt.legend()
 plt.savefig("outputs/predicted_vs_actual_warmup.png", dpi=150, bbox_inches="tight")
 plt.show()
+# A point above the diagonal means the actual high was greater than predicted
+# (the model under-predicted). A point below the diagonal means the actual
+# high was lower than predicted (the model over-predicted).
+
+## City chosen: Charlotte, North Carolina (latitude 35.23, longitude -80.84)
