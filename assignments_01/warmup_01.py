@@ -87,6 +87,8 @@ class StationBatch:
     def add(self, station: Station) -> None:
         self.stations.append(station)
     def highest(self) -> Station | None:
+        if len(self.stations) == 0:
+            return None
         return max(self.stations, key=lambda s: s.elevation)
 test_batch = StationBatch('rest', station_set)
 #ValueError: mutable default <class 'list'> for field stations is not allowed: use default_factory
