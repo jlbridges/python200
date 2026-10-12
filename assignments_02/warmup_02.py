@@ -5,6 +5,28 @@ from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error, r2_score
 
+temp_min = np.array([1, 4, 8, 12, 16, 20]).reshape(-1, 1)
+temp_max = np.array([8, 10, 15, 18, 23, 27])
+
+model = LinearRegression()
+model.fit(temp_min, temp_max)
+
+pred_6 = model.predict([[6]])
+pred_18 = model.predict([[18]])
+
+print("Slope:", model.coef_[0])
+print("Intercept:", model.intercept_)
+print("Predicted high for a low of 6:", pred_6[0])
+print("Predicted high for a low of 18:", pred_18[0])
+
+x = np.array([10, 20, 30, 40, 50])
+print(x.shape)
+
+x_2d = x.reshape(-1, 1)
+print(x_2d.shape)
+
+#it needs a 2-d shape because it needs rows and columns
+
 rng = np.random.default_rng(42)
 num_days  = 120
 temp_min  = rng.uniform(-5, 22, num_days)
