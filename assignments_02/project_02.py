@@ -29,7 +29,23 @@ df = df.drop("time", axis=1)
 print(df.shape)
 print(df.head())
 print(df.describe())
+## City chosen: Charlotte, North Carolina (latitude 35.23, longitude -80.84)
 
+# Missing-value check
+print(df.isnull().sum())
+# Each column shows 0 missing values, so no rows need to be dropped or filled.
+
+# Exploratory plot
+os.makedirs("outputs", exist_ok=True)
+plt.figure(figsize=(6, 5))
+plt.scatter(df["temperature_2m_min"], df["temperature_2m_max"])
+plt.title("Daily High vs Low (Charlotte, 2023)")
+plt.xlabel("Daily low (°C)")
+plt.ylabel("Daily high (°C)")
+plt.savefig("outputs/low_vs_high_charlotte.png", dpi=150, bbox_inches="tight")
+plt.show()
+# The plot shows a strong, roughly linear upward relationship: warmer nights
+# go with warmer days, so temperature_2m_min should be the strongest predictor.
 corr = df.select_dtypes(include="number").corr()["temperature_2m_max"].sort_values()
 print(corr)
 # The strongest relationship with the daily high is temperature_2m_min.
@@ -90,7 +106,7 @@ plt.ylabel("Actual daily high (°C)")
 plt.savefig("outputs/predicted_vs_actual_high.png", dpi=150, bbox_inches="tight")
 plt.show()
 
-# the size of the data set is 300 the sampel size is 30
+# the size of the data set is 300 the sample size is 30. the is_rainy feature had the most impact to the left
 #R^2 0.8805
 #RMSE 2.5955
-#how consistent it is
+#the result that suppressed me is how much is_rainy affected data
