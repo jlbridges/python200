@@ -67,6 +67,7 @@ my_test.add(45)
 my_test_2 = Thermometer('raleigh', [10, 20])
 print(my_test)
 print([my_test, my_test_2])
+print(my_test.hottest())  # Explicitly displays the highest reading value
 breach_test_one = TemperatureAlert(15)
 breach_test_two = TemperatureAlert()  # default 30
 print(breach_test_one.breaches(my_test.readings))
@@ -94,6 +95,10 @@ print(len(station_set))
 @dataclass
 class StationBatch:
     region: str
+    # Original error when attempting a bare mutable list default:
+    # ValueError: mutable default <class 'list'> for field stations is not allowed: use default_factory
+    # This occurs because Python evaluates default arguments once at definition time,
+    # causing all class instances to share the exact same list object in memory.
     stations: list[Station] = field(default_factory=list)
 
     def add(self, station: Station) -> None:
@@ -114,6 +119,9 @@ print(test_batch.highest())
 
 
 class Reading(BaseModel):
+    # Pydantic type coercion rule: Pydantic automatically attempts to parse and convert
+    # input types into the declared field types (e.g., converting a numeric string like "21.5"
+    # into a float) as long as the conversion is safe and does not violate field constraints.
     station_id: str = Field(min_length=3)
     timestamp: str
     temperature_c: float = Field(ge=-90, le=60)
