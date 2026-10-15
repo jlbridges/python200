@@ -1,245 +1,97 @@
 from dataclasses import dataclass, field, FrozenInstanceError
-
 import pytest
 from pydantic import BaseModel, Field, ValidationError, model_validator
 
 
+# ==========================================
+# --- Classes ---
+# ==========================================
+
+# Q1
 class Thermometer:
-    def __init__(self, location, readings=[]):
+    """A thermometer that tracks temperature readings for a specific location."""
+    def __init__(self, location: str, readings: list[float] = None):
         self.location = location
-        self.readings = readings
+        self.readings = readings if readings is not None else []
 
-    def add(self, temps):
-        self.readings.append(temps)
+    def add(self, reading: float) -> None:
+        """Append a new temperature reading."""
+        self.readings.append(reading)
 
-    def average(self):
-        # return None if 0 to handle divide by 0 errors
-        if len(self.readings) == 0:
+    def average(self) -> float | None:
+        """Return the mean of the readings, or None if there are none."""
+        # Comment: Why does average() need to handle the empty case? What would happen without that check?
+        # Without checking for an empty list, sum() / len() would attempt to divide by zero
+        # (ZeroDivisionError), crashing the program. Handling it explicitly allows the method
+        # to safely return None instead.
+        if not self.readings:
             return None
-        average = sum(self.readings) / len(self.readings)
-        return average
+        return sum(self.readings) / len(self.readings)
 
-    def hottest(self):
-        # To avoid a ZeroDivisionError when dividing by zero length, and to prevent a ValueError from max() on an empty sequence.
-        if len(self.readings) == 0:
+    def hottest(self) -> float | None:
+        """Return the highest reading, or None if there are none."""
+        if not self.readings:
             return None
         return max(self.readings)
 
-    # add __repr__ to return object attributes so it does not print the memory location of the thermometer object
-    def __repr__(self):
+    # Q2
+    def __repr__(self) -> str:
         return f"Thermometer(location='{self.location}', n_readings={len(self.readings)}, average={self.average()})"
 
 
+# Demonstration of Classes Q1 & Q2
+my_thermometer = Thermometer("Charlotte", [15.0, 18.5, 22.0, 19.5])
+print("--- Classes Q1 & Q2 Output ---")
+print("Average:", my_thermometer.average())
+print("Hottest:", my_thermometer.hottest())
+print("Direct print:", my_thermometer)
+print("List print:", [my_thermometer, Thermometer("Raleigh", [10.0, 12.0])])
+
+# Comment: What Python displays when a class has no __repr__, and why that is unhelpful when debugging:
+# Without a custom __repr__, Python displays the default object representation (e.g.,
+# <__main__.Thermometer object at 0x7f8b9c...>), which only shows the memory address
+# and provides zero insight into the object's actual state, attribute values, or data contents.
+
+
+# Q3
 class TemperatureAlert:
-    def __init__(self, threshold=30.0):
+    """Encapsulates a threshold rule to detect temperature breaches."""
+    def __init__(self, threshold: float = 30.0):
         self.threshold = threshold
 
-    def breaches(self, readings):
-        temp_breaches = []
-        for i in readings:
-            if i > self.threshold:
-                temp_breaches.append(i)
-        return temp_breaches
-        # returns a list of temps above the threshold
+    def breaches(self, thermometer: Thermometer) -> list[float]:
+        """Return a list of every reading in the Thermometer above the threshold."""
+        return [r for r in thermometer.readings if r > self.threshold]
 
 
+# Demonstration of Classes Q3
+alert_standard = TemperatureAlert(20.0)
+alert_strict = TemperatureAlert(18.0)
+print("\n--- Classes Q3 Output ---")
+print("Standard threshold breaches:", alert_standard.breaches(my_thermometer))
+print("Strict threshold breaches:", alert_strict.breaches(my_thermometer))
+
+# Comment: Why is the threshold stored on TemperatureAlert rather than passed as an argument to breaches()?
+# What advantage does that give you if you have twenty thermometers to check?
+# Storing the threshold on the instance encapsulates the configuration rule directly on the object.
+# If you have twenty thermometers to check against the same threshold, you can reuse a single
+# TemperatureAlert instance across all of them without needing to repeatedly pass the threshold value
+# into every method call.
+
+
+# ==========================================
+# --- Dataclasses, Type Hints, and Docstrings ---
+# ==========================================
+
+# Dataclass Question 1 & 2
 @dataclass(frozen=True)
 class Station:
-    """I'm not a weather expert so I'm not sure what a station is supposed to represent.
-    My best guess is it's a weather station, but not sure why the lat/long would be needed
+    """Represents a physical weather monitoring station.
 
     Attributes:
-        station_id: id of the station as int
-        name: the name of the station as str
-        latitude: the latitude of where the station is? float
-        longitude: the longitude of where the station is? float
-        elevation: the elevation of the station I guess? float
+        station_id: Unique identifier for the station.
+        name: Common name of the station.
+        latitude: Geographic latitude coordinate.
+        longitude: Geographic longitude coordinate.
+        elevation: Elevation above sea level in meters.
     """
-    station_id: int
-    name: str
-    latitude: float
-    longitude: float
-    elevation: float
-
-
-my_test = Thermometer('durham', [10, 20, 30, 40])
-my_test.add(45)
-my_test_2 = Thermometer('raleigh', [10, 20])
-print(my_test)
-print([my_test, my_test_2])
-print(my_test.hottest())  # Explicitly displays the highest reading value
-breach_test_one = TemperatureAlert(15)
-breach_test_two = TemperatureAlert()  # default 30
-print(breach_test_one.breaches(my_test.readings))
-print(breach_test_two.breaches(my_test.readings))
-# It encapsulates the configuration rule on the instance so you can reuse the same TemperatureAlert object across twenty different thermometers without passing the threshold value into breaches() every time.
-
-station_a = Station(123, 'test', 40.2, 30.5, 20.4)
-station_b = Station(123, 'test', 40.2, 30.5, 20.4)
-# returns True because dataclass generates __eq__
-# the original way would require the developer to write an __eq__ method
-print(station_a == station_b)
-station_c = Station(456, 'test_c', 30.2, 40.5, 60.4)
-print(station_c)
-try:
-    station_a.name = 'new_test'
-except FrozenInstanceError as e:
-    print("Cannot modify:", e)
-station_set = {station_a, station_b, station_c}
-print(len(station_set))
-
-
-# so that objects are not modified after they are created
-
-
-@dataclass
-class StationBatch:
-    region: str
-    # Original error when attempting a bare mutable list default:
-    # ValueError: mutable default <class 'list'> for field stations is not allowed: use default_factory
-    # This occurs because Python evaluates default arguments once at definition time,
-    # causing all class instances to share the exact same list object in memory.
-    stations: list[Station] = field(default_factory=list)
-
-    def add(self, station: Station) -> None:
-        """Add a new Station object to the batch collection."""
-        self.stations.append(station)
-
-    def highest(self) -> Station | None:
-        """Return the station with the highest elevation, or None if the batch is empty."""
-        if not self.stations:
-            return None
-        return max(self.stations, key=lambda s: s.elevation)
-
-
-test_batch = StationBatch('rest', list(station_set))
-print(test_batch)
-test_batch.add(Station(456, 'test_h', 30.2, 40.5, 60.4))
-print(test_batch.highest())
-
-
-class Reading(BaseModel):
-    # Pydantic type coercion rule: Pydantic automatically attempts to parse and convert
-    # input types into the declared field types (e.g., converting a numeric string like "21.5"
-    # into a float) as long as the conversion is safe and does not violate field constraints.
-    station_id: str = Field(min_length=3)
-    timestamp: str
-    temperature_c: float = Field(ge=-90, le=60)
-    humidity: float = Field(ge=0, le=100)
-
-    @model_validator(mode="after")
-    def check_temp_order(self):
-        if self.humidity == 0.0 and self.temperature_c < -40:
-            raise ValueError(
-                f"failed sensor: humidity: ({self.humidity}) temperature_c: ({self.temperature_c})"
-            )
-        return self
-
-
-try:
-    new_reading_1 = Reading(station_id="123", timestamp="10/5/2026", temperature_c=14.8, humidity=50.0)
-    print(new_reading_1)
-except ValidationError as e:
-    print("\n", e)
-
-try:
-    new_reading_2 = Reading(station_id="123", temperature_c=14.8, humidity=50.0)
-except ValidationError as e:
-    print("\n", e)
-
-try:
-    new_reading_3 = Reading(station_id="123", timestamp="10/5/2026", temperature_c=150.0, humidity=50.0)
-except ValidationError as e:
-    print("\n", e)
-
-try:
-    new_reading_4 = Reading(station_id="123", timestamp="10/5/2026", temperature_c=14.8, humidity="very humid")
-except ValidationError as e:
-    print("\n", e)
-
-try:
-    new_reading_5 = Reading(station_id="123", timestamp="10/5/2026", temperature_c="21.5", humidity=40)
-    print(type(new_reading_5.temperature_c))
-    print(type(new_reading_5.humidity))
-except ValidationError as e:
-    print("\n", e)
-
-try:
-    new_reading_6 = Reading(station_id="13", temperature_c="two", humidity=40)
-except ValidationError as e:
-    for error in e.errors():
-        print("location:", error["loc"])
-        print("message: ", error["msg"])
-
-try:
-    new_reading_7 = Reading(station_id="123", timestamp="10/5/2026", temperature_c=-41.0, humidity=0.0)
-except ValidationError as e:
-    for error in e.errors():
-        print("location:", error["loc"])
-        print("message: ", error["msg"])
-
-
-def celsius_to_fahrenheit(celsius: float) -> float:
-    """Convert Celsius temperature to Fahrenheit."""
-    return celsius * 9 / 5 + 32
-
-
-def test_celsius_to_fahrenheit():
-    assert celsius_to_fahrenheit(0) == 32
-    assert celsius_to_fahrenheit(100) == 212
-
-    # pytest.approx is necessary here because floating-point arithmetic (multiplying by 9/5)
-    # cannot represent decimal fractions like 98.6 perfectly in binary, evaluating instead
-    # to 98.60000000000002, which would cause a strict '==' assertion to fail.
-    assert celsius_to_fahrenheit(37) == pytest.approx(98.6)
-
-
-def mean(values: list[float]) -> float:
-    if len(values) <= 0:
-        raise ValueError('values are empty')
-    return sum(values) / len(values)
-
-
-def test_mean_of_empty_raises():
-    # pytest.raises(ValueError) alone would pass if ValueError was raised for any unexpected reason.
-    # match="empty" ensures the exception message explicitly contains "empty", verifying it failed
-    # specifically due to empty input data rather than an unrelated bug.
-    with pytest.raises(ValueError, match="empty"):
-        mean([])
-
-
-# Using a single parametrized test beats writing four or five near-identical test functions
-# because it adheres to the DRY (Don't Repeat Yourself) principle, avoids code duplication,
-# and makes it much cleaner to scale or add additional test inputs.
-@pytest.mark.parametrize(
-    "values, expected",
-    [
-        ([5.0], 5.0),
-        ([1.0, 2.0, 3.0], 2.0),
-        ([1.0, 2.0], 1.5),
-        ([-1.0, -2.0, -3.0], -2.0),
-        ([-5.0, 5.0], 0.0),
-    ],
-)
-def test_mean_values(values, expected):
-    assert mean(values) == pytest.approx(expected)
-# 6 passed in 0.02s
-
-
-# ==========================================
-# Pytest Q4: Deliberately Broken Version & Report
-# ==========================================
-# def celsius_to_fahrenheit_broken(celsius: float) -> float:
-#     return celsius * 9 / 5  # Intentionally omitted '+ 32'
-#
-# def test_celsius_broken_report():
-#     assert celsius_to_fahrenheit_broken(0) == 32
-#
-# --- Pytest Failure Output Report ---
-# FAILED test_file.py::test_celsius_broken_report - assert 0.0 == 32
-# E       +  where 0.0 = celsius_to_fahrenheit_broken(0)
-#
-# What pytest showed in the failure report:
-# Pytest pointed directly to the failing line of code, showed the exact expected value (32)
-# alongside the actual computed value (0.0), and included a detailed variable breakdown
-# showing the exact return value produced by the function call.
