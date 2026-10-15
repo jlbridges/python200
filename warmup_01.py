@@ -1,7 +1,8 @@
-from dataclasses import dataclass, FrozenInstanceError, field
+from dataclasses import dataclass, field, FrozenInstanceError
 
 import pytest
 from pydantic import BaseModel, Field, ValidationError, model_validator
+
 
 class Thermometer:
     def __init__(self, location, readings = []):
@@ -18,12 +19,13 @@ class Thermometer:
         average = sum(self.readings) / len(self.readings)
         return average
     def hottest(self):
+        # To avoid a ZeroDivisionError when dividing by zero length, and to prevent a ValueError from max() on an empty sequence.
         if len(self.readings) == 0:
             return None
         return max(self.readings)
     #add __repr__ to return object attributes so it does not print the memory location of the thermometer object
     def __repr__(self):
-        return f"Thermometer(location={self.location}, n_readings={self.readings}, average={self.average()})"
+        return f"Thermometer(location='{self.location}', n_readings={len(self.readings)}, average={self.average()})"
 
 class TemperatureAlert:
     def __init__(self, threshold = 30.0):
@@ -55,16 +57,15 @@ class Station:
 
 
 my_test = Thermometer('durham', [10,20,30,40])
-print(my_test)
-my_test_2 =Thermometer('raleigh', [14,19,28,43])
-thermometer_list = [my_test, my_test_2]
-print(thermometer_list)
 my_test.add(45)
+my_test_2 = Thermometer('raleigh', [10, 20])
+print(my_test)
+print([my_test, my_test_2])
 breach_test_one = TemperatureAlert(15)
 breach_test_two = TemperatureAlert() #default 30
 print(breach_test_one.breaches(my_test.readings))
 print(breach_test_two.breaches(my_test.readings))
-# it's in temp alert so the threshold can be changed without affecting breaches()
+# It encapsulates the configuration rule on the instance so you can reuse the same TemperatureAlert object across twenty different thermometers without passing the threshold value into breaches() every time.
 
 station_a = Station(123, 'test', 40.2, 30.5, 20.4)
 station_b = Station(123, 'test', 40.2, 30.5, 20.4)
@@ -80,6 +81,7 @@ except FrozenInstanceError as e:
 station_set = {station_a, station_b, station_c}
 print(len(station_set))
 #so that objects are not modified after they are created
+
 @dataclass
 class StationBatch:
     region: str
@@ -87,10 +89,10 @@ class StationBatch:
     def add(self, station: Station) -> None:
         self.stations.append(station)
     def highest(self) -> Station | None:
-        if len(self.stations) == 0:
+        if not self.stations:
             return None
         return max(self.stations, key=lambda s: s.elevation)
-test_batch = StationBatch('rest', station_set)
+test_batch = StationBatch('rest', list(station_set))
 #ValueError: mutable default <class 'list'> for field stations is not allowed: use default_factory
 print(test_batch)
 test_batch.add(Station(456, 'test_h', 30.2, 40.5, 60.4))
@@ -163,7 +165,7 @@ except ValidationError as e:
 # this rule needs to check if both are true to indicate a failed sensor. if one is true and one if false then it could be a valid reading
 
 def celsius_to_fahrenheit(celsius: float) -> float:
-    """doc string """
+    """Test the celsius_to_fahrenheit function with exact and approximate values."""
     return celsius * 9 / 5 + 32
 def test_celsius_to_fatest_celsius_to_fahrenheit():
     assert celsius_to_fahrenheit(0) == 32
@@ -181,7 +183,7 @@ def test_mean_of_empty_raises():
     "values, expected",
     [
         ([5.0], 5.0),
-        ([1.0, 3.0, 3.0], 2.0),
+        ([1.0, 2.0, 3.0], 2.0),
         ([1.0, 2.0], 1.5),
         ([-1.0, -2.0, -3.0], -2.0),
         ([-5.0, 5.0], 0.0),
@@ -189,4 +191,4 @@ def test_mean_of_empty_raises():
 )
 def test_mean_values(values, expected):
     assert mean(values) == pytest.approx(expected)
-#assert 257.0 == 212 +  where 257.0 = celsius_to_fahrenheit(100)
+# 6 passed in 0.02s
