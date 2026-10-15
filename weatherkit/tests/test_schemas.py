@@ -29,7 +29,7 @@ def test_valid_response_has_168_hours():
     # the current working directory, which depends on where pytest is run from
     # (or which run configuration the IDE uses). Building the path from
     # __file__ anchors it to this test file's location instead.
-    path = Path(__file__).parent.parent / "weather_raw.json"
+    path = Path(__file__).resolve().parents[2] / "weather_raw.json"
     with open(path) as f:
         data = json.load(f)
     response = WeatherResponse.model_validate(data)
