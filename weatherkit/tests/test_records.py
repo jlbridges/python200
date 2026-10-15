@@ -1,8 +1,6 @@
 import pytest
-
-from weatherkit import HourlyReading, WeatherResponse, to_readings
-
-
+from ..records import HourlyReading, to_readings
+from ..schemas import WeatherResponse
 @pytest.fixture
 def response():
     """A small valid response with distinct values at every index."""
@@ -19,6 +17,7 @@ def response():
     })
 
 
+# Task 5 Note: Caught by this test when to_readings was broken by slicing short.
 def test_to_readings_one_per_hour_in_order(response):
     readings = to_readings(response)
     assert len(readings) == 3
