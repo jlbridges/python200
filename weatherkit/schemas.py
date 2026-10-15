@@ -2,7 +2,7 @@ from pydantic import BaseModel, Field, model_validator, ValidationError
 
 
 class HourlyBlock(BaseModel):
-    """A block of parallel hourly weather time-series arrays from the API[cite: 2]."""
+    """A block of parallel hourly weather time-series arrays from the API."""
 
     time: list[str]
     temperature_2m: list[float]
@@ -20,7 +20,7 @@ class HourlyBlock(BaseModel):
 
 
 class WeatherResponse(BaseModel):
-    """A daily historical weather response from the Open-Meteo archive API[cite: 2]."""
+    """A daily historical weather response from the Open-Meteo archive API."""
 
     latitude: float = Field(ge=-90, le=90)
     longitude: float = Field(ge=-180, le=180)
