@@ -106,7 +106,7 @@ print(probabilities[:5].round(2))
 cm = confusion_matrix(y_test, model.predict(X_test[numeric]))
 disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=["skip", "good"])
 disp.plot(colorbar=False)
-plt.title("KNN Confusion Matrix")
+plt.title("Logistic Regression Confusion Matrix")
 plt.savefig("outputs/logreg_confusion_matrix.png")
 plt.show()
 # The model made 9 false positives and 7 false negatives. False positives may matter more for a running app because they recommend running when conditions are unsuitable.
