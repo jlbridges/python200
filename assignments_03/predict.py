@@ -1,3 +1,4 @@
+
 import json
 import joblib
 import pandas as pd
@@ -29,21 +30,24 @@ days = pd.DataFrame([
 predictions = model.predict(days)
 probabilities = model.predict_proba(days)
 
+good_index = list(model.classes_).index(1)
+
 for i, row in days.iterrows():
     label = "good" if predictions[i] == 1 else "skip"
-    good_probability = probabilities[i][list(model.classes_).index(1)]
+    good_probability = probabilities[i][good_index]
 
     print(f"\nDay {i + 1}:")
     print(row.to_dict())
     print("Prediction:", label)
     print(f"Probability of good: {good_probability:.1%}")
+
+
 """
-1. The borderline day received a probability of [insert probability] for
-   being good for running. A probability near 0.50 indicates uncertainty.
-   If the model predicts 0.52, I would treat the prediction cautiously
-   because the model is only slightly more likely to classify the day as
-   good than skip. I would consider the actual weather conditions before
-   recommending a run.
+1. The borderline day received a probability of 27.3% for being good
+   for running. The model predicted skip. A probability below 0.50
+   indicates that the model considers skip more likely than good.
+   I would consider the actual weather conditions before recommending
+   a run.
 
 2. If predict.py runs before train_classifier.py, the saved model file
    will not exist, and joblib.load() will raise a FileNotFoundError.
