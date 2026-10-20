@@ -79,7 +79,7 @@ for k in [1, 3, 5, 7, 9, 11, 15, 21]:
 
 knn_raw = KNeighborsClassifier(n_neighbors=5)
 knn_raw.fit(X_train[numeric], y_train)
-
+print(classification_report(y_test, knn_scaled.predict(X_test[numeric])))
 print("Without scaling:", accuracy_score(y_test, knn_raw.predict(X_test[numeric])))
 print("With scaling:", accuracy_score(y_test, knn_scaled.predict(X_test[numeric])))
 # Scaling helped, improving accuracy from 0.925 to 0.958; scaling matters because KNN uses distances, and features with larger numeric ranges can otherwise dominate those distances.

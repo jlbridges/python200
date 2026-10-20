@@ -3,9 +3,9 @@ import pandas as pd
 import os
 import joblib
 import platform
-import sys
 import sklearn
 import json
+
 from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import Pipeline
@@ -33,20 +33,17 @@ params = {
     ],
     "timezone": "America/New_York",
 }
-response = requests.get(url, params=params)
-response.raise_for_status()
-df = pd.DataFrame(response.json()["daily"])
-df["date"] = pd.to_datetime(df["time"])
-df = df.drop("time", axis=1)
 
 response = requests.get(url, params=params)
 response.raise_for_status()
+
 df = pd.DataFrame(response.json()["daily"])
 df["date"] = pd.to_datetime(df["time"])
 df = df.drop("time", axis=1)
 
 print(df.shape)
 print(df.head())
+
 # Chosen city: Charlotte, North Carolina.
 df["good_for_running"] = (
     (df["temperature_2m_max"].between(7, 26))
@@ -55,15 +52,15 @@ df["good_for_running"] = (
     & (df["wind_speed_10m_max"] < 30)
 ).astype(int)
 
-print(df["good_for_running"].value_counts().rename(index={1: "Good days", 0: "Skip days"}))
+print(
+    df["good_for_running"]
+    .value_counts()
+    .rename(index={1: "Good days", 0: "Skip days"})
+)
 
-# The fraction of good days is the number of good days divided by all days; assess whether this is reasonable for the chosen city's climate.
+# The fraction of good days is the number of good days divided by all days.
 # If the classes are imbalanced, prioritize precision, recall, and F1 alongside accuracy.
 
-model = Pipeline([
-    ("scaler", StandardScaler()),
-    ("logreg", LogisticRegression(max_iter=1000)),
-])
 features = [
     "temperature_2m_max",
     "temperature_2m_min",
@@ -77,10 +74,17 @@ y = df["good_for_running"]
 X_train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=0.2, random_state=42, stratify=y
 )
+
+# Logistic Regression
+model = Pipeline([
+    ("scaler", StandardScaler()),
+    ("logreg", LogisticRegression(max_iter=1000)),
+])
+
 model.fit(X_train, y_train)
 y_pred = model.predict(X_test)
 
-print("Test accuracy:", accuracy_score(y_test, y_pred))
+print("Logistic Regression test accuracy:", accuracy_score(y_test, y_pred))
 print("Precision:", precision_score(y_test, y_pred, pos_label=1))
 print("Recall:", recall_score(y_test, y_pred, pos_label=1))
 print("F1:", f1_score(y_test, y_pred, pos_label=1))
@@ -89,21 +93,50 @@ print(classification_report(y_test, y_pred))
 logreg = model.named_steps["logreg"]
 for name, coef in zip(features, logreg.coef_[0]):
     print(f"{name:20s}: {coef:+.2f}")
+
 # Negative coefficients push predictions toward "skip" (0).
 # The largest negative coefficients indicate the conditions that most strongly push a day toward skip.
 
-# Logistic Regression had higher accuracy than KNN on my test data.
+# KNN with scaling and cross-validation
+k_values = [1, 3, 5, 7, 9]
+cv_scores = {}
+
+for k in k_values:
+    knn_pipeline = Pipeline([
+        ("scaler", StandardScaler()),
+        ("knn", KNeighborsClassifier(n_neighbors=k)),
+    ])
+
+    scores = cross_val_score(knn_pipeline, X_train, y_train, cv=5)
+    cv_scores[k] = scores.mean()
+    print(f"k={k}: mean CV accuracy={scores.mean():.3f}")
+
+best_k = max(cv_scores, key=cv_scores.get)
+
+knn_model = Pipeline([
+    ("scaler", StandardScaler()),
+    ("knn", KNeighborsClassifier(n_neighbors=best_k)),
+])
+
+knn_model.fit(X_train, y_train)
+knn_predictions = knn_model.predict(X_test)
+
+print("Best k:", best_k)
+print("KNN test accuracy:", accuracy_score(y_test, knn_predictions))
+print(classification_report(y_test, knn_predictions))
+
+# Compare the models using their actual evaluation results.
 # For a running app, I would prioritize precision to reduce false positives,
 # which could recommend running on a bad-weather day. False negatives mean
 # missing a good running day. Both matter, but sending someone out in unsafe
 # weather is the greater concern.
-# I would deploy Logistic Regression because it is small, fast, and its
-# coefficients help explain which weather conditions influence predictions.
+# Logistic Regression is small, fast, and its coefficients help explain
+# which weather conditions influence predictions.
 # It can also provide probability confidence scores using predict_proba().
 
 os.makedirs("models", exist_ok=True)
 
-# Save the fitted pipeline
+# Save the fitted Logistic Regression pipeline
 joblib.dump(model, "models/weather_classifier.pkl")
 
 # Calculate metrics for the saved model
