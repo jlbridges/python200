@@ -32,8 +32,8 @@ print(X_train_scaled.mean(axis=0))
 
 encoder = OneHotEncoder(sparse_output=False)
 
-seasons = [["winter"], ["spring"], ["summer"], ["fall"]]
-encoded = encoder.fit_transform(seasons)
+
+encoded = encoder.fit_transform(df[["season"]])
 print(encoded.shape)
 print(encoder.get_feature_names_out())
 # The single season column became 4 columns because there are 4 unique categories, each represented by its own binary column.
