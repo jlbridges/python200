@@ -274,13 +274,19 @@ result = get_completion(prompt, temperature=0)
 print("Ollama Q1 - OpenAI response:", result)
 
 # Ollama output (paste your real output between the quotes below):
+# Ollama output:
 """
-Ollama Q1 - OpenAI response: A large language model is an artificial intelligence system designed to understand and generate human-like text by analyzing vast amounts of written data. It uses deep learning techniques, particularly neural networks, to predict and produce coherent and contextually relevant language based on the input it receives.
+A large language model (LLM) is a type of artificial intelligence trained
+on large amounts of text data to understand and generate human-like language.
+It can answer questions, summarize information, and generate text based on
+patterns learned during training.
 """
 
 # What differences did you notice between the two responses?
-# <Describe what you actually saw, e.g. the local model's length, accuracy, and
-# whether it printed extra "thinking" text before the answer.>
+# Both responses explained what a large language model is and described its
+# ability to generate human-like text. The OpenAI response provided more detail
+# about neural networks and predicting language, while the Ollama response was
+# more straightforward and easier to follow.
 #
 # Advantage of running locally: no per-token cost, and your data stays on your machine.
 # Disadvantage: small local models are usually less accurate and can be slower on a laptop.
